@@ -1,0 +1,176 @@
+#include<iostream>
+using namespace std;
+
+class T{
+	public:
+		int data;
+};
+class KEY{
+	public:
+		int key;
+};
+struct Elem {
+	KEY key;
+	T data;
+	Elem *left;
+	Elem *right;
+	bool rightThread; //normal right child link or a threadlink
+
+};
+Elem *_root; // a dummy root sentinel
+int _size;
+// helper method for inserting record into tree.
+bool insert(Elem *& root, const KEY &key, const T &data, Elem *lastLeft);
+
+// helper method for print tree
+void printTree(ostream& out, int level, Elem *p);
+
+// common code for deallocation
+void destructCode(Elem *& p);
+
+Elem *Successor(Elem *ptr)
+{
+    // If rthread is set, we can quickly find
+    if (ptr -> rightThread == false)
+        return ptr->right;
+ 
+    // Else return leftmost child of right subtree
+    ptr = ptr -> right;
+    while (ptr -> left !=NULL)
+        ptr = ptr -> left;
+    return ptr;
+}
+ostream & operator<<(ostream & out, const Elem * p)
+{
+  return out;
+}
+
+int main(){
+	 Elem * root = new Elem;
+	 root =NULL;
+	 _root =NULL;
+	 for(int i=0;i<11;i++){
+		KEY key;
+		key.key=i;
+		T t;
+		t.data=i*i+i+2+6;
+	 	if(insert(root, key, t, _root)){
+			cout<<i<<"th key is entered"<<endl;
+		}
+	}	
+	printTree(cout, 0, _root);
+	destructCode(root);
+	printTree(cout, 0, _root);
+}
+bool insert(Elem *& root, const KEY &key, const T &data, Elem *lastLeft){
+    Elem *ptr = lastLeft;
+    Elem *par = NULL; // Parent of key to be inserted
+    int ikey=key.key;
+    while (ptr != NULL)
+    {
+        // If key already exists, return
+        if (ikey == (ptr->key.key))
+        {
+            cout<<"This key is already inserted"<<endl;
+            return false;
+        }
+        par = ptr; // Update parent pointer
+ 
+        // Moving on left subtree.
+        if (ikey < ptr->key.key)
+        {
+            if (ptr -> left != NULL)
+                ptr = ptr -> left;
+            else
+                break;
+        }
+ 
+        // Moving on right subtree.
+        else
+        {
+            if (ptr->rightThread == false)
+                ptr = ptr -> right;
+            else
+                break;
+        }
+    }
+ 
+    // Create a new node
+    Elem *tmp = new Elem;
+    tmp -> key.key = ikey;
+    tmp -> data.data = data.data;
+    tmp -> rightThread = true;
+ 
+    if (par == NULL)
+    {
+        tmp -> left = NULL;
+        tmp -> right = NULL;
+        root = tmp;
+    }
+    else if (ikey < (par -> key.key))
+    {
+        tmp -> left = par -> left;
+        tmp -> right = par;
+        par -> left = tmp;
+    }
+    else
+    {
+        tmp -> left = par;
+        tmp -> right = par -> right;
+        par -> rightThread = false;
+        par -> right = tmp;
+    }
+    Elem * as=root;
+    while(as->left!=NULL){
+	as=as->left;
+    }
+	_root=as;
+    return true;
+}	
+// Printing the threaded tree
+void printTree(ostream & out, int k, Elem *root)
+{
+    if (root == NULL)
+        out<<"Tree is empty"<<endl;
+ 
+    // Reach leftmost node
+    else{
+	    Elem *ptr = root;
+	    out<<ptr->data.data<<endl;
+	    // One by one print successors
+	    while (ptr->right != NULL)
+	    {
+		ptr = Successor(ptr);
+		out<<ptr->data.data<<endl;
+	    }
+    }
+    return;
+}
+void destructCode(Elem *& p)
+{
+    if (p == NULL)
+        cout<<"Tree already empty"<<endl;
+ 
+    // Reach leftmost node
+    Elem *ptr = p;
+    // One by one print successors
+    while (ptr->right != NULL)
+    {	
+	Elem * newptr = ptr;
+	delete ptr;
+        ptr = Successor(newptr);
+    }
+	delete ptr;
+	p=NULL;
+	_root=NULL;
+    return;
+}
+
+
+
+
+
+
+
+
+
