@@ -1,0 +1,278 @@
+#include<iostream>
+using namespace std;
+
+class T{
+	public:
+		int data;
+};
+class KEY{
+	public:
+		int key;
+};
+struct Elem {
+	KEY key;
+	T data;
+	Elem *left;
+	Elem *right;
+	bool rightThread; //normal right child link or a threadlink
+
+};
+Elem *_root; // a dummy root sentinel
+int _size;
+// helper method for inserting record into tree.
+bool insert(Elem *& root, const KEY &key, const T &data, Elem *lastLeft);
+
+// helper method for print tree
+void printTree(ostream& out, int level, Elem *p);
+
+// common code for deallocation
+void destructCode(Elem *& p);
+
+int height(Elem *node);
+void balancefactor(Elem* cur);
+void doubleRotateLeft(Elem *& n);
+void doubleRotateRight(Elem *&n);
+void rotateLeft(Elem *&n);
+void rotateRight(Elem *&n);
+Elem *Successor(Elem *ptr)
+{
+    // If rthread is set, we can quickly find
+    if (ptr -> rightThread == true)
+        return ptr->right;
+ 
+    // Else return leftmost child of right subtree
+    ptr = ptr -> right;
+    while (ptr -> left !=NULL)
+        ptr = ptr -> left;
+    return ptr;
+}
+
+
+int main(){
+	 Elem * root = new Elem;
+	 root =NULL;
+	 _root =NULL;
+	 for(int i=-6;i<5;i++){
+		KEY key;
+		key.key=i;
+		T t;
+		t.data=i*i+i+2;
+	 	if(insert(root, key, t, _root)){
+			cout<<i<<"th key is entered"<<t.data<<endl;
+		}
+	}	
+	printTree(cout, 0, _root);
+	cout<<"Height of the binary tree: "<<height(root)<<endl;
+	cout<<"Balance factor of the root: ";
+	balancefactor(root);
+	doubleRotateLeft(root);
+	cout<<"Balance factor after 1st DoubleRotateLeft of the root: ";
+	balancefactor(root);
+	doubleRotateLeft(root);
+	cout<<"Balance factor after 2nd DoubleRotateLeft of the root: ";
+	balancefactor(root);
+}
+bool insert(Elem *& root, const KEY &key, const T &data, Elem *lastLeft){
+    Elem *ptr = lastLeft;
+    Elem *par = NULL; // Parent of key to be inserted
+    int ikey=data.data;
+    while (ptr != NULL)
+    {
+        // If key already exists, return
+        if (ikey == (ptr->data.data))
+        {
+            cout<<"This key is already inserted"<<endl;
+            return false;
+        }
+        par = ptr; // Update parent pointer
+ 
+        // Moving on left subtree.
+        if (ikey < ptr->data.data)
+        {
+            if (ptr -> left != NULL)
+                ptr = ptr -> left;
+            else
+                break;
+        }
+ 
+        // Moving on right subtree.
+        else
+        {
+            if (ptr->rightThread == false)
+                ptr = ptr -> right;
+            else
+                break;
+        }
+    }
+ 
+    // Create a new node
+    Elem *tmp = new Elem;
+    tmp -> key.key = key.key;
+    tmp -> data.data = ikey;
+    tmp -> rightThread = true;
+ 
+    if (par == NULL)
+    {
+        tmp -> left = NULL;
+        tmp -> right = NULL;
+        root = tmp;
+    }
+    else if (ikey < (par -> data.data))
+    {
+        tmp -> left = NULL;
+        tmp -> right = par;
+        par -> left = tmp;
+    }
+    else
+    {
+        tmp -> left = NULL;
+        tmp -> right = par -> right;
+        par -> rightThread = false;
+        par -> right = tmp;
+    }
+    Elem * as=root;
+    while(as->left!=NULL){
+	as=as->left;
+    }
+	_root=as;
+    return true;
+}	
+// Printing the threaded tree
+void printTree(ostream & out, int k, Elem *root)
+{
+    if (root == NULL)
+        out<<"Tree is empty"<<endl;
+ 
+    // Reach leftmost node
+    else{
+	    Elem *ptr = root;
+	    out<<ptr->data.data<<endl;
+	    // One by one print successors
+	    while (ptr->right != NULL)
+	    {
+		ptr = Successor(ptr);
+		out<<ptr->data.data<<endl;
+	    }
+    }
+    return;
+}
+void destructCode(Elem *& p)
+{
+    if (p == NULL)
+        cout<<"Tree already empty"<<endl;
+ 
+    // Reach leftmost node
+    Elem *ptr = p;
+    // One by one print successors
+    while (ptr->right != NULL)
+    {	
+	Elem * newptr = ptr;
+	delete ptr;
+        ptr = Successor(newptr);
+    }
+	delete ptr;
+	p=NULL;
+	_root=NULL;
+    return;
+}
+int height(Elem* node)
+{
+    // Base case: empty tree has a height of 0
+    if (node == NULL) {
+        return 0;
+    }
+    if(node->rightThread==true){
+	return 1 + height(node->left);
+    }
+    // recur for the left and right subtree and consider maximum depth
+
+    return 1 + max(height(node->left), height(node->right));
+}
+void balancefactor(Elem *N) {
+  if (N == NULL)
+    return;
+  cout<<height(N->left)-height(N->right)<<endl;
+}
+
+void doubleRotateLeft(Elem *& n){
+	Elem *p;
+	Elem *tp;
+	p = n;
+	tp = p->left;
+	if(tp->rightThread==false){
+		p->left = tp->right;
+	}
+	else{
+		p->left=NULL;
+	}
+	tp->right = p;
+	n=tp;
+}
+void doubleRotateRight(Elem *&n){
+        Elem *p;
+        Elem *tp;
+        p = n;
+        tp = p->right;
+	if(p->right!=NULL){
+        	p->right = tp->left;
+		p->rightThread=false;
+	}
+	else{
+		p->right = tp;
+		p->rightThread=true;
+	}
+        tp->left = p;
+
+        n=tp; 
+}
+void rotateLeft(Elem *&n){
+        Elem *p;
+        Elem *tp;
+        Elem *tp2;
+        p = n;
+        tp = p->left;
+        tp2 =p->left->right;
+	if(tp2->rightThread==true){
+		p->left=NULL;
+	}
+	else{
+	        p -> left = tp2->right;
+	}
+        tp ->right = tp2;
+	tp->rightThread=true;
+        tp2 ->right = p;
+        tp2->left = tp; 
+        
+        p=tp2; 
+}
+
+void rotateRight(Elem *&n){
+        Elem *p;
+        Elem *tp;
+        Elem *tp2;
+        p = n;
+        tp = p->right;
+        tp2 =p->right->left;
+	if(tp2->right!=NULL){
+	        p -> right = tp2->left;
+		p->rightThread=false;
+	}
+	else{
+		p->right=tp2;
+		p->rightThread=true;
+	}
+	if(tp2->rightThread==false){
+	        tp ->left = tp2->right;
+	}
+	else{
+		tp->left = NULL;
+	}
+        tp2 ->left = p;
+        tp2->right = tp; 
+        
+        n=tp2; 
+}
+
+
+
+
